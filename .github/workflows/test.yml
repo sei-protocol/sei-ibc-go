@@ -22,7 +22,7 @@ jobs:
       - uses: actions/setup-go@v2.1.5
         with:
           go-version: 1.17
-      - uses: technote-space/get-diff-action@v6.0.1
+      - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
           PATTERNS: |
@@ -70,7 +70,7 @@ jobs:
       - uses: actions/setup-go@v2.1.5
         with:
           go-version: 1.17
-      - uses: technote-space/get-diff-action@v6.0.1
+      - uses: technote-space/get-diff-action@v6.1.2
         with:
           PATTERNS: |
             **/**.go
