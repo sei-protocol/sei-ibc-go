@@ -200,7 +200,7 @@ func (k Keeper) sendTransfer(
 
 	defer func() {
 		if token.Amount.IsInt64() {
-			telemetry.SetGaugeWithLabels(
+			telemetry.IncrCounterWithLabels(
 				[]string{"tx", "msg", "ibc", "transfer"},
 				float32(token.Amount.Int64()),
 				[]metrics.Label{telemetry.NewLabel(coretypes.LabelDenom, fullDenomPath)},
@@ -291,8 +291,8 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 
 		defer func() {
 			if transferAmount.IsInt64() {
-				telemetry.SetGaugeWithLabels(
-					[]string{"ibc", types.ModuleName, "packet", "receive"},
+				telemetry.IncrCounterWithLabels(
+					[]string{"ibc", types.ModuleName, "packet", "receive", "native"},
 					float32(transferAmount.Int64()),
 					[]metrics.Label{telemetry.NewLabel(coretypes.LabelDenom, unprefixedDenom)},
 				)
@@ -351,8 +351,8 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 
 	defer func() {
 		if transferAmount.IsInt64() {
-			telemetry.SetGaugeWithLabels(
-				[]string{"ibc", types.ModuleName, "packet", "receive"},
+			telemetry.IncrCounterWithLabels(
+				[]string{"ibc", types.ModuleName, "packet", "receive", "non-native"},
 				float32(transferAmount.Int64()),
 				[]metrics.Label{telemetry.NewLabel(coretypes.LabelDenom, data.Denom)},
 			)
@@ -425,6 +425,16 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 			return sdkerrors.Wrap(err, "unable to unescrow tokens, this may be caused by a malicious counterparty module or a bug: please open an issue on counterparty module")
 		}
 
+		defer func() {
+			if transferAmount.IsInt64() {
+				telemetry.IncrCounterWithLabels(
+					[]string{"ibc", types.ModuleName, "refund"},
+					float32(transferAmount.Int64()),
+					[]metrics.Label{telemetry.NewLabel(coretypes.LabelDenom, data.Denom)},
+				)
+			}
+		}()
+
 		return nil
 	}
 
@@ -438,6 +448,16 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, sdk.NewCoins(token)); err != nil {
 		panic(fmt.Sprintf("unable to send coins from module to account despite previously minting coins to module account: %v", err))
 	}
+
+	defer func() {
+		if transferAmount.IsInt64() {
+			telemetry.IncrCounterWithLabels(
+				[]string{"ibc", types.ModuleName, "burn"},
+				float32(transferAmount.Int64()),
+				[]metrics.Label{telemetry.NewLabel(coretypes.LabelDenom, data.Denom)},
+			)
+		}
+	}()
 
 	return nil
 }
