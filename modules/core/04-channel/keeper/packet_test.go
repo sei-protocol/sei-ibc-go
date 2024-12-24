@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"errors"
 	"fmt"
+	"github.com/cosmos/ibc-go/v3/modules/core/04-channel/keeper"
+	"testing"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -864,6 +866,38 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 				if expError != nil {
 					suite.Require().True(errors.Is(err, expError))
 				}
+			}
+		})
+	}
+}
+
+func Test_GetPacketTimeoutErrorMessage(t *testing.T) {
+	type args struct {
+		latestTimestamp  int64
+		timeoutTimestamp int64
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantErr    bool
+		wantErrMsg string
+	}{
+		{
+			"test that timestamp is in UTC",
+			args{
+				latestTimestamp:  1734828084008577679,
+				timeoutTimestamp: 1734882264,
+			},
+			true,
+			"receiving chain block timestamp >= packet timeout timestamp (2024-12-22 00:41:24.008577679 +0000 UTC >= 1970-01-01 00:00:01.734882264 +0000 UTC): packet timeout",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := keeper.GetPacketTimeoutErrorMessage(tt.args.latestTimestamp, tt.args.timeoutTimestamp); (err != nil) != tt.wantErr {
+				t.Errorf("getWrongTimestampErrorMessage() error = %v, wantErr %v", err, tt.wantErr)
+			} else if err != nil && err.Error() != tt.wantErrMsg {
+				t.Errorf("getWrongTimestampErrorMessage() error = %v, wantErrMsg %v", err.Error(), tt.wantErrMsg)
 			}
 		})
 	}
