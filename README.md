@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> This repository has been archived and is moved to [`sei-chain`](https://github.com/sei-protocol/sei-chain) as a nested module.
+
 # ibc-go
 <div align="center">
   <a href="https://github.com/cosmos/ibc-go/releases/latest">
